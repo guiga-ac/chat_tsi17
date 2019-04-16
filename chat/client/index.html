@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Client</title>
+    <meta name="viewport" content="
+            width=device-width, 
+            initial-scale=1.0, 
+            maximum-scale=1.0, 
+            user-scalable=no">
+    <style>
+        * {
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        html,
+        body {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            background-image: url(ahoy.jpg);
+            background-size: contain;
+            border: 1px solid lightgray;       
+        }
+        
+        div.messages {
+            display: flex;
+            justify-content: flex-end;
+            flex-direction: column;
+            width: 100%;
+            height: 93%;              
+        }
+
+        div.messages div.send,
+        div.messages div.received {
+            min-width: 30%;
+            max-width: 80%;
+            padding: 1vw;
+
+        }
+
+        div.messages div.send {
+            background: rgba(132, 50, 57, 0.7);
+            color: white;
+            align-self: flex-end;
+            text-align: right;
+        }
+
+        div.messages div.received {
+            background: rgba(141, 142, 157, 0.7);
+            color: white;
+            align-self: flex-start;
+        }
+
+        div.input {
+            display: flex;
+            position: fixed;
+            width: 100%;
+            height: 7.5vh;
+            bottom: 0
+        }
+
+        div.input textarea {
+            flex-grow: 1;
+            border-radius: 50px;
+            border: 1px solid gray;
+            background: rgba(255, 255, 255, 0.9);
+            margin-bottom: 5px;
+            margin-top: 5px;
+            padding-left: 15px;
+            padding-right: 15px;
+            height: 40px;
+        }
+        .system{
+            background: rgba(132, 50, 57, 0.7); /* R, G, B, A */
+            text-align: center;
+            border: 1px solid white;
+            height: 20px;
+            color: white;
+        }
+        
+        div.input button{
+            border: none;
+            background-image: url(share.png);
+            background-repeat: no-repeat;
+            background-position: center;
+            border-radius: 20px;
+            background-color: rgba(132, 50, 57, 0.7);
+            height: 45px;
+            width: 40px;
+            margin-top: 3px;
+            margin-right: 5px;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="messages"></div>
+    <div class="input">
+        <textarea></textarea>
+        <button></button>
+    </div>
+    <script>
+        const button = document.querySelector('button');
+        const messages = document.querySelector('div.messages');
+        const textarea = document.querySelector('textarea');
+        const serverHost = "ws://192.168.0.14:8080";
+        const ws = new WebSocket(serverHost);
+
+        const mostraTexto = (className, text) => {
+            let div = document.createElement('div');
+            div.className = className;
+            div.innerHTML = text;
+            messages.appendChild(div);
+        }
+
+        const receberMsg = ev => {
+            mostraTexto('received ', "Recebido:<br>"+ev.data);
+        }
+
+        const enviarMsg = () => {
+            if ((textarea.value).trim() != ""){
+            ws.send(textarea.value);
+            mostraTexto('send', "Enviado:<br>"+textarea.value);
+            textarea.value = "";
+            textarea.style.borderColor= "gray";
+            }else{
+                textarea.style.borderColor = "red";
+            }
+            
+        }
+
+        const enviarMsgBt = ev => {
+            ev.preventDefault();
+            enviarMsg();
+        }
+
+        const enviarMsgKey = ev => {
+            if (ev.which == 13) {
+                ev.preventDefault();
+                enviarMsg();
+            }
+        }
+
+        const conectado = ev => {
+            mostraTexto('system', "Ahoy! Bem-vindo a bordo marujo!");
+        }
+
+        const desconectado = ev => {
+            mostraTexto('system', "conexão perdida");
+        }
+
+        const erro = ev => {
+            mostraTexto('system-error', ev);
+        }
+
+        textarea.addEventListener('keydown', enviarMsgKey);
+        button.addEventListener('click', enviarMsgBt);
+
+        ws.addEventListener('open', conectado);
+        ws.addEventListener('close', desconectado);
+        ws.addEventListener('message', receberMsg);
+        ws.addEventListener('error', erro);
+    </script>
+</body>
+
+</html>
